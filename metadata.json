@@ -1,0 +1,6 @@
+{
+  "name": "AI Personal Knowledge Assistant",
+  "description": "A professional AI-powered personal knowledge base and document RAG assistant using React, Node.js, and Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

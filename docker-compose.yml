@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # =========================================================
+  # MongoDB - Main Database
+  # =========================================================
+  mongodb:
+    image: mongo:6.0
+    container_name: knowledge_assistant_db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=knowledge_assistant
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # =========================================================
+  # Backend Microservice - Express API / RAG / AI engine
+  # =========================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: knowledge_assistant_api
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/knowledge_assistant
+      - PORT=3000
+    volumes:
+      - uploads_data:/app/server/uploads
+      - logs_data:/app/server/logs
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r => r.status === 200 ? process.exit(0) : process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # =========================================================
+  # Nginx - Reverse Proxy, Security & Load Balancer
+  # =========================================================
+  nginx:
+    image: nginx:alpine
+    container_name: knowledge_assistant_proxy
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dist:/usr/share/nginx/html:ro # Serve the statically built client directly
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# =========================================================
+# Shared Volumes & Networks Configuration
+# =========================================================
+volumes:
+  mongodb_data:
+    driver: local
+  uploads_data:
+    driver: local
+  logs_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
