@@ -6,11 +6,12 @@ import { connectDB } from '../config/db';
 import { logger } from '../utils/logger';
 import UserModelRaw from '../models/user.model';
 import { ApplicationSettingsModel as ApplicationSettingsRaw } from '../models/applicationSettings.model';
-import { PricingPlansModel as PricingPlansRaw } from '../models/pricingPlans.model';
 import { FaqModel as FaqRaw } from '../models/faq.model';
-import { TestimonialsModel as TestimonialsRaw } from '../models/testimonials.model';
-
+import { PricingPlanModel as PricingPlansRaw } from '../models/pricingPlans.model';
+import { TestimonialModel as TestimonialsRaw } from '../models/testimonials.model';
 dotenv.config();
+
+
 
 const UserModel: any = UserModelRaw;
 const ApplicationSettingsModel: any = ApplicationSettingsRaw;
